@@ -61,14 +61,15 @@ model User {
 }
 
 model VendorProfile {
-  id          String   @id @default(uuid())
-  userId      String   @unique
-  user        User     @relation(fields: [userId], references: [id])
-  storeName   String
-  bankAccount String
-  bankCode    String
-  isVerified  Boolean  @default(false)
-  createdAt   DateTime @default(now())
+  id                    String   @id @default(uuid())
+  userId                String   @unique
+  user                  User     @relation(fields: [userId], references: [id])
+  storeName             String
+  bankAccount           String
+  bankCode              String
+  paystackRecipientCode String?
+  isVerified            Boolean  @default(false)
+  createdAt             DateTime @default(now())
 
   products Product[]
   payouts  Payout[]
@@ -117,7 +118,8 @@ model OrderItem {
 }
 
 model Transaction {
-  id         String    @id @default(uuid())
+  id String @id @default(uuid())
+
   orderId    String    @unique
   order      Order     @relation(fields: [orderId], references: [id])
   provider   String
@@ -129,16 +131,20 @@ model Transaction {
 }
 
 model Payout {
-  id        String        @id @default(uuid())
-  vendorId  String
-  vendor    VendorProfile @relation(fields: [vendorId], references: [id])
-  orderId   String
-  order     Order         @relation(fields: [orderId], references: [id])
-  amount    Decimal       @db.Decimal(10, 2)
-  status    PayoutStatus  @default(PENDING)
-  reference String?
-  createdAt DateTime      @default(now())
-  paidAt    DateTime?
+  id                 String        @id @default(uuid())
+  vendorId           String
+  vendor             VendorProfile @relation(fields: [vendorId], references: [id])
+  orderId            String
+  order              Order         @relation(fields: [orderId], references: [id])
+  grossAmount        Decimal       @db.Decimal(10, 2) // before fee
+  platformFeePercent Decimal       @db.Decimal(5, 2) // snapshot, e.g. 5.00
+  platformFeeAmount  Decimal       @db.Decimal(10, 2) // snapshot, actual naira amount taken
+  amount             Decimal       @db.Decimal(10, 2) // net, what vendor actually receives
+  status             PayoutStatus  @default(PENDING)
+  availableAt        DateTime // when the 24hr hold expires and it's eligible to process
+  reference          String?
+  createdAt          DateTime      @default(now())
+  paidAt             DateTime?
 }
 
 model Review {

@@ -2,14 +2,17 @@ import "dotenv/config"
 import express from "express"
 import { connectDB, disconnectDB } from "./config/db.js"
 
+import adminRoutes from "./routes/adminRoutes.js"
 import authRoutes from "./routes/authRoutes.js"
 import vendorRoutes from "./routes/vendorRoutes.js"
 import productRoutes from "./routes/productRoutes.js"
 import orderRoutes from "./routes/orderRoutes.js"
 import reviewRoutes from "./routes/reviewRoutes.js"
 import paymentRoutes from "./routes/paymentRoutes.js"
+import transactionRoutes from "./routes/transactionRoutes.js"
 import { handlePaystackWebhook } from "./controllers/paymentController.js"
-
+import cronRoutes from "./routes/cronRoutes.js"
+import utilRoutes from "./routes/utilRoutes.js"
 connectDB()
 
 const app = express()
@@ -20,12 +23,17 @@ app.use("/api/webhooks/payment", express.raw({ type: "application/json" }),handl
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 
+
+app.use("/api/cron", cronRoutes)
 app.use("/auth", authRoutes)
 app.use("/vendor-profile", vendorRoutes)
 app.use("/product", productRoutes)
 app.use("/orders", orderRoutes)
 app.use("/review", reviewRoutes)
 app.use("/order", paymentRoutes)
+app.use("/transactions", transactionRoutes)
+app.use("/admin", adminRoutes)
+app.use("/", utilRoutes)
 
 
 

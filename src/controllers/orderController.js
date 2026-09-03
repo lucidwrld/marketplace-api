@@ -118,7 +118,7 @@ const syncOrderStatus = async (tx, orderId) => {
 
     await tx.order.update({
         where: { id: orderId },
-        data: { status: newStatus, confirmedAt: newStatus === "CONFIRMED" ? new Date().getDate : null },
+        data: { status: newStatus, confirmedAt: newStatus === "CONFIRMED" ? new Date() : null },
     });
 };
 
@@ -147,7 +147,7 @@ const updateBuyerOrderItemStatus = async (req, res) => {
         if (!checkIfUserIsTheVendorOfOrderItem) {
             return res.status(403).json({ error: "Vendor does not have permission to perform this action" })
         }
-        if (checkIfUserIsTheVendorOfOrderItem.status !== "PAID" || checkIfUserIsTheVendorOfOrderItem.status !== "SHIPPED"){
+        if (checkIfUserIsTheVendorOfOrderItem.status === "PENDING" ){
             return res.status(400).json({error: "Buyer has not paid for this Item"})
         }
 

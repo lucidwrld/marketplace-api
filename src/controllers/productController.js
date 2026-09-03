@@ -98,7 +98,7 @@ const getAllProducts = async (req, res) => {
 
 
         const where = { isActive: true }
-        if (search) where.title = search
+        if (search) where.title =  { contains: search, mode: "insensitive" };
 
         const [allProducts, totalItems] = await prisma.$transaction([
             prisma.product.findMany({
@@ -132,18 +132,18 @@ const getAllVendorProductsAsBuyer = async (req, res) => {
         const currentPage = Math.max(1, parseInt(page) || 1)
         const pageSizeNo = Math.min(100, Math.max(1, parseInt(pageSize) || 20))
 
-        const where = {isActive: true}
-        if (search) where.title = search
-        if(vendorId) where.vendorId = vendorId
+        const where = { isActive: true }
+        if (search) where.title =  { contains: search, mode: "insensitive" };
+        if (vendorId) where.vendorId = vendorId
 
-        
+
         const [allProducts, totalItems] = await prisma.$transaction([
-            prisma.product.findMany({
+             prisma.product.findMany({
                 where,
                 skip: (currentPage - 1) * pageSizeNo,
                 take: pageSizeNo,
-                orderBy: {createdAt: "desc"}
-            }), prisma.product.count({where})
+                orderBy: { createdAt: "desc" }
+            }), prisma.product.count({ where })
         ])
 
         res.status(200).json({
@@ -153,7 +153,7 @@ const getAllVendorProductsAsBuyer = async (req, res) => {
                 page: currentPage,
                 pageSize: pageSizeNo,
                 totalItems,
-                totalPages: Math.ceil(totalItems/pageSizeNo)
+                totalPages: Math.ceil(totalItems / pageSizeNo)
             }
         })
     } catch (error) {
@@ -164,7 +164,10 @@ const getAllVendorProductsAsBuyer = async (req, res) => {
 const getAllProductsAsAVendor = async (req, res) => {
     try {
         const userId = req.user.id
+        const { page, pageSize, search } = req.query
 
+        const currentPage = Math.max(1, parseInt(page) || 1)
+        const pageSizeNo = Math.min(100, Math.max(1, parseInt(pageSize) || 20))
         const checkIfUserExistsAsAVendor = await prisma.vendorProfile.findUnique({
             where: { userId: userId }
         })
@@ -176,19 +179,23 @@ const getAllProductsAsAVendor = async (req, res) => {
             })
         }
 
-        const allProducts = await prisma.product.findMany({
-            where: { vendorId: checkIfUserExistsAsAVendor.id }
-        })
+        const where =  { vendorId: checkIfUserExistsAsAVendor.id }
+        if(search !== undefined) where.title =  { contains: search, mode: "insensitive" };
+        const [allProducts, totalItems] = await prisma.$transaction([
+             prisma.product.findMany({
+                where
+            }), prisma.product.count({ where})
+        ])
 
         res.status(200).json({
             status: "success",
             data: allProducts,
-            
+
             pagination: {
                 page: currentPage,
                 pageSize: pageSizeNo,
                 totalItems,
-                totalPages: Math.ceil(totalItems/pageSizeNo)
+                totalPages: Math.ceil(totalItems / pageSizeNo)
             }
         })
     } catch (error) {
