@@ -7,11 +7,10 @@ const PAYSTACK_SECRET_KEY = process.env.PAYSTACK_SECRET_KEY
 const PLATFORM_FEE_PERCENT = 5;
 
 
-const initializePayment = async (req, res) => {
+const initializePayment = async (req, res) => { 
     try {
         const userId = req.user.id
-        const orderId = req.params.id
-
+        const orderId = req.params.id 
         const order = await prisma.order.findUnique({
             where: { id: orderId, buyerId: userId, status: "PENDING" }
         })
