@@ -42,19 +42,18 @@ const initializePayment = async (req, res) => {
     }
 }
 
-const handlePaystackWebhook = async (req, res) => {
-    try {
-        const hash = crypto.createHmac("sha512", PAYSTACK_SECRET_KEY).update(JSON.stringify(req.body)).digest("hex")
-
+const handlePaystackWebhook = async (req, res) => { 
+    try { 
+        const hash = crypto.createHmac("sha512", PAYSTACK_SECRET_KEY).update(req.body).digest("hex") 
         if(hash !== req.headers["x-paystack-signature"]){
             return res.status(401).json({error: "Invalid Signature"})
         }
-
+ 
         const event = JSON.parse(req.body)
+        
         if(event.event === "charge.success"){
             const {reference, amount, metadata} = event.data;
-            const orderId = metadata.orderId
-
+            const orderId = metadata.orderId 
             await prisma.$transaction(async (tx) => {
                 const order = await tx.order.findUnique({
                     where: {id: orderId}
@@ -70,8 +69,9 @@ const handlePaystackWebhook = async (req, res) => {
                     data: {
                         orderId,
                         provider: "paystack",
-                        amount,
+                        amount: amount / 100,
                         isEscrow: true,
+                        reference: reference
 
                     }
                 })
@@ -81,6 +81,11 @@ const handlePaystackWebhook = async (req, res) => {
                     data: {
                         status: "PAID"
                     }
+                })
+
+                await tx.orderItem.updateMany({
+                    where: {orderId: orderId, status: "PENDING"},
+                    data: {status: "PAID"}
                 })
             })
 
