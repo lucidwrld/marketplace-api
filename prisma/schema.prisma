@@ -1,0 +1,153 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  BUYER
+  VENDOR
+  ADMIN
+}
+
+enum OrderStatus {
+  PENDING
+  PAID
+  PARTIALLY_SHIPPED
+  SHIPPED
+  CONFIRMED
+  DISPUTED
+  REFUNDED
+  CANCELLED
+}
+
+enum OrderItemStatus {
+  PENDING
+  PAID
+  SHIPPED
+  DELIVERED
+  DISPUTED
+  REFUNDED
+  CANCELLED
+}
+
+enum PayoutStatus {
+  PENDING
+  PROCESSING
+  PAID
+  FAILED
+}
+
+model User {
+  id         String   @id @default(uuid())
+  first_name String
+  last_name  String
+  email      String   @unique
+  password   String
+  role       Role     @default(BUYER)
+  phone      String?
+  createdAt  DateTime @default(now())
+
+  vendorProfile VendorProfile?
+  orders        Order[]        @relation("BuyerOrders")
+  reviews       Review[]
+}
+
+model VendorProfile {
+  id          String   @id @default(uuid())
+  userId      String   @unique
+  user        User     @relation(fields: [userId], references: [id])
+  storeName   String
+  bankAccount String
+  bankCode    String
+  isVerified  Boolean  @default(false)
+  createdAt   DateTime @default(now())
+
+  products Product[]
+  payouts  Payout[]
+}
+
+model Product {
+  id          String        @id @default(uuid())
+  vendorId    String
+  vendor      VendorProfile @relation(fields: [vendorId], references: [id])
+  title       String
+  description String
+  price       Decimal       @db.Decimal(10, 2)
+  stock       Int           @default(0)
+  imageUrl    String?
+  isActive    Boolean       @default(true)
+  createdAt   DateTime      @default(now())
+
+  orderItems OrderItem[]
+  reviews    Review[]
+}
+
+model Order {
+  id          String      @id @default(uuid())
+  buyerId     String
+  buyer       User        @relation("BuyerOrders", fields: [buyerId], references: [id])
+  totalAmount Decimal     @db.Decimal(10, 2)
+  status      OrderStatus @default(PENDING)
+  createdAt   DateTime    @default(now())
+  confirmedAt DateTime?
+
+  items        OrderItem[]
+  transactions Transaction[]
+  payouts      Payout[]
+}
+
+model OrderItem {
+  id        String          @id @default(uuid())
+  orderId   String
+  order     Order           @relation(fields: [orderId], references: [id])
+  productId String
+  status    OrderItemStatus @default(PENDING)
+  product   Product         @relation(fields: [productId], references: [id])
+  vendorId  String
+  quantity  Int
+  unitPrice Decimal         @db.Decimal(10, 2)
+}
+
+model Transaction {
+  id         String    @id @default(uuid())
+  orderId    String    @unique
+  order      Order     @relation(fields: [orderId], references: [id])
+  provider   String
+  reference  String    @unique
+  amount     Decimal   @db.Decimal(10, 2)
+  isEscrow   Boolean   @default(true)
+  createdAt  DateTime  @default(now())
+  releasedAt DateTime?
+}
+
+model Payout {
+  id        String        @id @default(uuid())
+  vendorId  String
+  vendor    VendorProfile @relation(fields: [vendorId], references: [id])
+  orderId   String
+  order     Order         @relation(fields: [orderId], references: [id])
+  amount    Decimal       @db.Decimal(10, 2)
+  status    PayoutStatus  @default(PENDING)
+  reference String?
+  createdAt DateTime      @default(now())
+  paidAt    DateTime?
+}
+
+model Review {
+  id        String   @id @default(uuid())
+  productId String
+  product   Product  @relation(fields: [productId], references: [id])
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  rating    Int
+  comment   String?
+  createdAt DateTime @default(now())
+}

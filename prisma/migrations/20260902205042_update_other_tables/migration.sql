@@ -1,0 +1,8 @@
+-- CreateEnum
+CREATE TYPE "OrderItemStatus" AS ENUM ('PENDING', 'SHIPPED', 'DELIVERED', 'DISPUTED', 'REFUNDED', 'CANCELLED');
+
+-- AlterEnum
+ALTER TYPE "OrderStatus" ADD VALUE 'PARTIALLY_SHIPPED';
+
+-- AlterTable
+ALTER TABLE "OrderItem" ADD COLUMN     "status" "OrderItemStatus" NOT NULL DEFAULT 'PENDING';
