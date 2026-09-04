@@ -198,14 +198,7 @@ const processEligiblePayouts = async () => {
 
             const uniqueReference = `pay_${payout.id}_${crypto.randomUUID().substring(0, 8)}`;
             // Call Paystack's Transfer API using the vendor's registered bank details
-
-            console.log({
-                    source: "balance",
-                    amount: Math.round(Number(payout.amount) * 100), // kobo
-                    recipient: payout.vendor.paystackRecipientCode,
-                    reason: `Payout for order ${payout.orderId}`,
-                    reference: uniqueReference
-                })
+ 
             const transferResponse = await axios.post(
                 "https://api.paystack.co/transfer",
                 {
@@ -227,8 +220,7 @@ const processEligiblePayouts = async () => {
                 },
             });
         } catch (error) {
-            console.error(`Payout ${payout.id} failed:`, error.message);
-            console.error(error)
+            console.error(`Payout ${payout.id} failed:`, error.message); 
             await prisma.payout.update({
                 where: { id: payout.id },
                 data: { status: "FAILED", failureReason: error.message},
