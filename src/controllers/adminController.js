@@ -1,7 +1,8 @@
 import axios from "axios"
 import { prisma } from "../config/db.js"
 
-
+const PAYSTACK_SECRET_KEY = process.env.PAYSTACK_SECRET_KEY
+const PLATFORM_FEE_PERCENT = 5;
 const getAdminPayouts = async (req, res) => {
     try {
         if (req.user.role !== "ADMIN") {
