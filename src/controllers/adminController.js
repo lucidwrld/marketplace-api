@@ -199,6 +199,13 @@ const processEligiblePayouts = async () => {
             const uniqueReference = `pay_${payout.id}_${crypto.randomUUID().substring(0, 8)}`;
             // Call Paystack's Transfer API using the vendor's registered bank details
  
+            console.log({
+                    source: "balance",
+                    amount: Math.round(Number(payout.amount) * 100), // kobo
+                    recipient: payout.vendor.paystackRecipientCode,
+                    reason: `Payout for order ${payout.orderId}`,
+                    reference: uniqueReference
+                })
             const transferResponse = await axios.post(
                 "https://api.paystack.co/transfer",
                 {
