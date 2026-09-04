@@ -88,20 +88,21 @@ const getAdminGetVendors = async (req, res) => {
         const currentPage = Math.max(1, parseInt(page) || 1)
         const pageSizeNo = Math.min(100, Math.max(1, parseInt(pageSize) || 20))
 
-        if (isVerified && !Boolean(isVerified)) {
-            return res.status(400).json({ error: "isVerified can only be a boolean value" })
+        if (isVerified !== undefined && !["true", "false"].includes(isVerified)) {
+            return res.status(400).json({ error: "isVerified can only be true or false" })
         }
 
 
+
         const where = {}
-        if (isVerified) where.isVerified = isVerified
+        if (isVerified !== undefined) where.isVerified = isVerified === "true"
         const [vendors, totalItems] = await prisma.$transaction([
             prisma.vendorProfile.findMany({
                 where,
                 skip: (currentPage - 1) * pageSizeNo,
                 take: pageSizeNo,
-                orderBy: { createdAt: "desc" }, 
-            }),  prisma.payout.count({ where })
+                orderBy: { createdAt: "desc" },
+            }), prisma.vendorProfile.count({ where })
         ])
 
 
@@ -121,19 +122,19 @@ const getAdminGetVendors = async (req, res) => {
     }
 }
 
-const getAdminVendorById  = async (req, res) => {
+const getAdminVendorById = async (req, res) => {
     try {
         if (req.user.role !== "ADMIN") {
             return res.status(403).json({ error: "You do not have the permission" })
         }
-        const vendorId = req.params.id 
+        const vendorId = req.params.id
 
         const vendor = await prisma.vendorProfile.findUnique({
-            where: {id: vendorId}
+            where: { id: vendorId }
         })
 
-        if(!vendor){
-            return res.status(404).json({error: "Vendor not found"})
+        if (!vendor) {
+            return res.status(404).json({ error: "Vendor not found" })
         }
 
         res.status(200).json({
@@ -141,7 +142,7 @@ const getAdminVendorById  = async (req, res) => {
             data: vendor
         })
     } catch (error) {
-         res.status(400).json({error: error.message})
+        res.status(400).json({ error: error.message })
     }
 }
 
@@ -150,20 +151,20 @@ const verifyVendor = async (req, res) => {
         if (req.user.role !== "ADMIN") {
             return res.status(403).json({ error: "You do not have the permission" })
         }
-        const vendorId = req.params.id 
-        const {isVerified} = req.body
+        const vendorId = req.params.id
+        const { isVerified } = req.body
 
         const vendor = await prisma.vendorProfile.findUnique({
-            where: {id: vendorId}
+            where: { id: vendorId }
         })
 
-        if(!vendor){
-            return res.status(404).json({error: "Vendor not found"})
+        if (!vendor) {
+            return res.status(404).json({ error: "Vendor not found" })
         }
 
         const updatedVendor = await prisma.vendorProfile.update({
-            where: {id: vendorId},
-            data: {isVerified: isVerified}
+            where: { id: vendorId },
+            data: { isVerified: isVerified }
         })
 
         res.status(200).json({
@@ -172,7 +173,7 @@ const verifyVendor = async (req, res) => {
         })
 
     } catch (error) {
-            res.status(400).json({error: error.message})
+        res.status(400).json({ error: error.message })
     }
 }
 
@@ -198,7 +199,7 @@ const processEligiblePayouts = async () => {
 
             const uniqueReference = `pay_${payout.id}_${crypto.randomUUID().substring(0, 8)}`;
             // Call Paystack's Transfer API using the vendor's registered bank details
-  
+
             const transferResponse = await axios.post(
                 "https://api.paystack.co/transfer",
                 {
@@ -225,7 +226,7 @@ const processEligiblePayouts = async () => {
 
             await prisma.payout.update({
                 where: { id: payout.id },
-                data: { status: "FAILED", failureReason: paystackMessage},
+                data: { status: "FAILED", failureReason: paystackMessage },
             });
 
         }

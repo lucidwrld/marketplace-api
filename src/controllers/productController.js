@@ -120,7 +120,7 @@ const getAllProducts = async (req, res) => {
             }
         })
     } catch (error) {
-
+            res.status(400).json({error: error.message})
     }
 }
 
@@ -232,6 +232,10 @@ const deleteProductAsAVendor = async (req, res) => {
                 error: "User does not have permission to perform this action"
             })
         }
+
+        await prisma.product.delete({
+            where: {id: productId}
+        })
 
         res.status(200).json({
             status: "success",

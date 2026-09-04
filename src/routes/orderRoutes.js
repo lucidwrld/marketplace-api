@@ -1,8 +1,8 @@
 import express from "express"
 import { authMiddleware } from "../middleware/authMiddleware.js"
 import { validateRequest } from "../middleware/validateRequest.js"
-import { cancelOrderAsBuyer, cancelOrderItemStatus,  createOrder, getAllOrdersAsBuyer, getAllOrdersAsVendor, getOrderById, getOrderItemByIdasAdmin, getOrderItemByIdasVendor, getOrderItemsasAdmin, updateBuyerOrderItemStatus, updateOrderItemStatusAsAdmin } from "../controllers/orderController.js"
-import { createOrderSchema, updateBuyerOrderItemStatusSchema, updateOrderItemStatusAsAdminSchema } from "../validators/orderSchema.js" 
+import { cancelOrderAsBuyer, cancelOrderItemStatus,  createOrder, getAllOrdersAsBuyer, getAllOrdersAsVendor, getOrderById, getOrderItemByIdasAdmin, getOrderItemByIdasVendor, getOrderItemsasAdmin, updateOrderItemStatusAsVendor, updateOrderItemStatusAsAdmin } from "../controllers/orderController.js"
+import { createOrderSchema,  updateOrderItemStatusAsAdminSchema } from "../validators/orderSchema.js" 
 import { confirmItemDelivery } from "../controllers/paymentController.js"
 
 const router = express.Router()
@@ -10,7 +10,7 @@ const router = express.Router()
 router.use(authMiddleware)
 
 router.post("/create", validateRequest(createOrderSchema), createOrder)
-router.put("/update-buyer-order-item-status/:id", validateRequest(updateBuyerOrderItemStatusSchema), updateBuyerOrderItemStatus)
+router.put("/update-order-item-status-as-vendor/:id",  updateOrderItemStatusAsVendor)
 router.put("/update-order-item-status/:id", validateRequest(updateOrderItemStatusAsAdminSchema), updateOrderItemStatusAsAdmin)
 router.put("/cancel-order-as-buyer/:id", cancelOrderAsBuyer)
 router.put("/cancel-order-item/:id", cancelOrderItemStatus)

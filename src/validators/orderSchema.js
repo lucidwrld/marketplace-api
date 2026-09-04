@@ -7,10 +7,7 @@ const createOrderSchema = z.object({
         quantity: z.int("Quantity must be a whole number").positive("Enter a postive integer").min(1, "Quantity can not be less than 1 ")
     })).min(1, "Order needs atleast one Item")
 })
-
-const updateBuyerOrderItemStatusSchema = z.object({
-    status: z.enum(["PAID", "SHIPPED"], "status can either be PENDING or SHIPPED")
-})
+ 
 
 const updateOrderItemStatusAsAdminSchema = z.object({
     status: z.enum(["DISPUTED",

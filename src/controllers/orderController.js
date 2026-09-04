@@ -86,8 +86,13 @@ const syncOrderStatus = async (tx, orderId) => {
     if (items.length === 0) return;
 
     const statuses = items.map((i) => i.status);
-    const allCancelled = statuses.every((s) => s === "CANCELLED");
-    const allRefunded = statuses.every((s) => s === "REFUNDED");
+
+    const closedWithoutDelivery = ["CANCELLED", "REFUNDED"];
+
+
+    const allClosedWithoutDelivery = statuses.every((s) => closedWithoutDelivery.includes(s));
+    const anyRefunded = statuses.some((s) => s === "REFUNDED");
+
     const allDelivered = statuses.every((s) => s === "DELIVERED" || s === "CANCELLED");
     const allShippedOrFurther = statuses.every((s) =>
         ["SHIPPED", "DELIVERED", "CANCELLED"].includes(s)
@@ -99,10 +104,8 @@ const syncOrderStatus = async (tx, orderId) => {
 
     let newStatus;
 
-    if (allCancelled) {
-        newStatus = "CANCELLED";
-    } else if (allRefunded) {
-        newStatus = "REFUNDED";
+    if (allClosedWithoutDelivery) {
+        newStatus = anyRefunded ? "REFUNDED" : "CANCELLED";
     } else if (anyDisputed) {
         newStatus = "DISPUTED";
     } else if (allDelivered) {
@@ -123,9 +126,8 @@ const syncOrderStatus = async (tx, orderId) => {
 };
 
 
-const updateBuyerOrderItemStatus = async (req, res) => {
-    try {
-        const { status } = req.body
+const updateOrderItemStatusAsVendor = async (req, res) => {
+    try { 
         const userId = req.user.id
         const orderItemId = req.params.id
 
@@ -154,7 +156,7 @@ const updateBuyerOrderItemStatus = async (req, res) => {
         const updatedOrderItem = await prisma.$transaction(async (tx) => {
             const updated = await tx.orderItem.update({
                 where: { id: orderItemId },
-                data: { status: status }
+                data: { status: "SHIPPED" }
             })
 
             await syncOrderStatus(tx, updated.orderId)
@@ -308,7 +310,7 @@ const getAllOrdersAsBuyer = async (req, res) => {
                 take: pageSizeNo,
                 orderBy: { id: "desc" }
             }),
-            prisma.order.count()
+            prisma.order.count({where: { buyerId: userId }})
         ])
 
         res.status(200).json({
@@ -382,6 +384,10 @@ const getOrderById = async (req, res) => {
             where: { id: orderId, buyerId: userId },
             include: { items: true }
         })
+
+        if(!order){
+            return res.status(404).json({error: "No Order found"})
+        }
 
         res.status(200).json({
             status: "success",
@@ -533,4 +539,4 @@ const getOrderItemByIdasAdmin = async (req, res) => {
     }
 }
 
-export { syncOrderStatus,getOrderItemByIdasAdmin, getOrderItemsasAdmin, getAllOrdersAsBuyer, updateOrderItemStatusAsAdmin, getAllOrdersAsVendor, getOrderById, getOrderItemByIdasVendor, createOrder, updateBuyerOrderItemStatus, cancelOrderItemStatus, cancelOrderAsBuyer,  }
+export { syncOrderStatus,getOrderItemByIdasAdmin, getOrderItemsasAdmin, getAllOrdersAsBuyer, updateOrderItemStatusAsAdmin, getAllOrdersAsVendor, getOrderById, getOrderItemByIdasVendor, createOrder, updateOrderItemStatusAsVendor, cancelOrderItemStatus, cancelOrderAsBuyer,  }

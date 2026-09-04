@@ -111,11 +111,11 @@ const confirmItemDelivery = async (req, res) => {
         })
 
         if (!orderItem) {
-            res.status(404).json({ error: "Order does not exists" })
+          return  res.status(404).json({ error: "Order does not exists" })
         }
 
        if (orderItem.status !== "SHIPPED") {
-            res.status(400).json({ error: "Can not confirm order that has not been shipped" })
+          return  res.status(400).json({ error: "Can not confirm order that has not been shipped" })
         } 
 
 
