@@ -219,7 +219,7 @@ const processEligiblePayouts = async () => {
             console.error(`Payout ${payout.id} failed:`, error.message);
             await prisma.payout.update({
                 where: { id: payout.id },
-                data: { status: "FAILED", failureReason: error.message },
+                data: { status: "FAILED", failureReason: {error: error, message: error.message} },
             });
 
         }
