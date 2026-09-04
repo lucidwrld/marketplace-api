@@ -154,7 +154,7 @@ const updateVendorProfile = async (req, res) => {
         }
 
         if (checkIfUserExistsAsAVendor.userId !== userId) {
-            return res.status(401).json({ error: "You do not have permission to perform this action" })
+            return res.status(403).json({ error: "You do not have permission to perform this action" })
         }
 
 
@@ -216,7 +216,7 @@ const deleteVendorProfile = async (req, res) => {
         }
 
         if (checkUserHasPermission.userId !== userId) {
-            return res.status(401).json({ error: "You do not have permission to perform this action" })
+            return res.status(403).json({ error: "You do not have permission to perform this action" })
         }
 
 

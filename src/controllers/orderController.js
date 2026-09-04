@@ -433,7 +433,7 @@ const updateOrderItemStatusAsAdmin = async (req, res) => {
         })
 
         if (checkIfUserExistsAsAdmin.role !== "ADMIN") {
-            return res.status(401).json({ error: "User does not have a permission" })
+            return res.status(403).json({ error: "User does not have a permission" })
         }
 
 
@@ -515,7 +515,7 @@ const getOrderItemByIdasAdmin = async (req, res) => {
         const orderItemId = req.params.id
 
         if (user.role !== "ADMIN") {
-            return res.status(401).json({ error: "User does not permission" })
+            return res.status(403).json({ error: "User does not permission" })
         }
 
         const order = await prisma.orderItem.findFirst({
