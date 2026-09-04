@@ -1,5 +1,6 @@
 import axios from "axios"
 import { prisma } from "../config/db.js"
+import crypto from "crypto"
 
 const PAYSTACK_SECRET_KEY = process.env.PAYSTACK_SECRET_KEY
 const PLATFORM_FEE_PERCENT = 5;
@@ -195,6 +196,7 @@ const processEligiblePayouts = async () => {
                 data: { status: "PROCESSING" },
             });
 
+            const uniqueReference = `pay_${payout.id}_${crypto.randomUUID().substring(0, 8)}`;
             // Call Paystack's Transfer API using the vendor's registered bank details
             const transferResponse = await axios.post(
                 "https://api.paystack.co/transfer",
@@ -203,6 +205,7 @@ const processEligiblePayouts = async () => {
                     amount: Math.round(Number(payout.amount) * 100), // kobo
                     recipient: payout.vendor.paystackRecipientCode,
                     reason: `Payout for order ${payout.orderId}`,
+                    reference: uniqueReference
                 },
                 { headers: { Authorization: `Bearer ${PAYSTACK_SECRET_KEY}` } }
             );
@@ -217,9 +220,10 @@ const processEligiblePayouts = async () => {
             });
         } catch (error) {
             console.error(`Payout ${payout.id} failed:`, error.message);
+            console.error(error)
             await prisma.payout.update({
                 where: { id: payout.id },
-                data: { status: "FAILED", failureReason: {error: error, message: error.message} },
+                data: { status: "FAILED", failureReason: error.message},
             });
 
         }
