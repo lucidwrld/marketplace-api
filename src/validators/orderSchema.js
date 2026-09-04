@@ -14,4 +14,4 @@ const updateOrderItemStatusAsAdminSchema = z.object({
   "REFUNDED"], "status can either be DISPUTED or REFUNDED")
 })
 
-export {createOrderSchema, updateBuyerOrderItemStatusSchema, updateOrderItemStatusAsAdminSchema}
+export {createOrderSchema,  updateOrderItemStatusAsAdminSchema}

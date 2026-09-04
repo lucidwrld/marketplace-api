@@ -93,9 +93,9 @@ const syncOrderStatus = async (tx, orderId) => {
     const allClosedWithoutDelivery = statuses.every((s) => closedWithoutDelivery.includes(s));
     const anyRefunded = statuses.some((s) => s === "REFUNDED");
 
-    const allDelivered = statuses.every((s) => s === "DELIVERED" || s === "CANCELLED");
+    const allDelivered = statuses.every((s) => s === "DELIVERED" || closedWithoutDelivery.includes(s));
     const allShippedOrFurther = statuses.every((s) =>
-        ["SHIPPED", "DELIVERED", "CANCELLED"].includes(s)
+        ["SHIPPED", "DELIVERED", ...closedWithoutDelivery].includes(s)
     );
     const anyShippedOrFurther = statuses.some((s) =>
         ["SHIPPED", "DELIVERED"].includes(s)
@@ -177,7 +177,7 @@ const cancelOrderItemStatus = async (req, res) => {
     try {
         const userId = req.user.id
         const orderItemId = req.params.id
-        const checkIfBuyerHasThisOrder = await prisma.orderItem.findUnique({
+        const checkIfBuyerHasThisOrder = await prisma.orderItem.findFirst({
             where: { id: orderItemId, order: { buyerId: userId } }
         })
 
