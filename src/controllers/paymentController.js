@@ -53,20 +53,21 @@ const handlePaystackWebhook = async (req, res) => {
         if (event.event === "charge.success") {
             const { reference, amount, metadata } = event.data;
             const orderId = metadata.orderId
+ 
             await prisma.$transaction(async (tx) => {
                 const order = await tx.order.findUnique({
                     where: { id: orderId }
                 })
-
+                if(!order) return
                 const existing = await tx.transaction.findUnique({
-                    where: { reference: reference }
+                    where: { reference: reference, orderId: orderId }
                 })
 
                 if (existing) return
 
                 await tx.transaction.create({
                     data: {
-                        orderId,
+                        orderId: orderId,
                         provider: "paystack",
                         amount: amount / 100,
                         isEscrow: true,
