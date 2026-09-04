@@ -141,6 +141,7 @@ model Payout {
   platformFeeAmount  Decimal       @db.Decimal(10, 2) // snapshot, actual naira amount taken
   amount             Decimal       @db.Decimal(10, 2) // net, what vendor actually receives
   status             PayoutStatus  @default(PENDING)
+  failureReason      String?
   availableAt        DateTime // when the 24hr hold expires and it's eligible to process
   reference          String?
   createdAt          DateTime      @default(now())
